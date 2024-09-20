@@ -42,6 +42,7 @@ public class ModalView extends VerticalLayout {
         grid.setWidth("100%");
 
         editor.setWidth("auto");
+        editorDialog.setWidth("100%");
         editor.setChangeHandler(() -> {
             editorDialog.close(); // Close the dialog when changes are saved
             showEmployee(filter.getValue());

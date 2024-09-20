@@ -46,6 +46,11 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
     private Dialog dialog;
 
     public EmployeeEditor() {
+        this.firstName.setWidth("100%");
+        this.lastName.setWidth("100%");
+        this.patronymic.setWidth("100%");
+        this.description.setWidth("100%");
+        this.datePicker.setWidth("100%");
         HorizontalLayout actions = new HorizontalLayout(save, cancel, delete);
 
         add(lastName, firstName, patronymic, description, datePicker, actions);

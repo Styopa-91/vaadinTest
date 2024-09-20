@@ -6,11 +6,14 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.CallbackDataProvider;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 @Route("employee-list")
@@ -33,13 +36,24 @@ public class EmployeeListView extends VerticalLayout {
 
         grid.setPageSize(5);
         grid.setWidth("100%");
-        grid.setColumns("id", "lastName", "firstName", "patronymic", "description", "birthDate");
-        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+//
+        Grid.Column<Employee> idColumn = grid.addColumn(new ComponentRenderer<>(employee -> {
+            Button idButton = new Button(String.valueOf(employee.getId()));
+            idButton.addClickListener(click -> {
+                getUI().ifPresent(ui -> ui.navigate("employee-edit/" + employee.getId()));
+            });
+            return idButton; // Return the button to be displayed in the grid
+        })).setHeader("ID").setFlexGrow(0);
 
-        grid.addItemClickListener(event -> {
-            Employee selectedEmployee = event.getItem();
-            getUI().ifPresent(ui -> ui.navigate("employee-edit/" + selectedEmployee.getId()));
-        });
+        List<Grid.Column<Employee>> orderedColumns = new ArrayList<>();
+        orderedColumns.add(idColumn); // Add the ID column first
+        orderedColumns.addAll(grid.getColumns().stream()
+                .filter(column -> !column.equals(idColumn)) // Exclude the ID column to avoid duplication
+                .toList()); // Add remaining columns
+
+        // Set the column order
+        grid.setColumnOrder(orderedColumns);
+        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
 
         add(addNewBtn, grid);
         showEmployees();
