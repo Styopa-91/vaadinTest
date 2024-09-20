@@ -4,6 +4,7 @@ import com.project.vaadintest.components.EmployeeEditor;
 import com.project.vaadintest.domain.Employee;
 import com.project.vaadintest.repo.EmployeeRepo;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -17,8 +18,8 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.stream.Stream;
 
-@Route
-public class MainView extends VerticalLayout {
+@Route("modal-view")  // Different route to distinguish from the MainView
+public class ModalView extends VerticalLayout {
 
     private final EmployeeRepo employeeRepo;
 
@@ -26,41 +27,54 @@ public class MainView extends VerticalLayout {
 
     private final TextField filter = new TextField("", "Type to filter");
 
+    private final Dialog editorDialog = new Dialog();  // Dialog for editor
+
     @Autowired
-    public MainView(EmployeeRepo employeeRepo, EmployeeEditor editor) {
+    public ModalView(EmployeeRepo employeeRepo, EmployeeEditor editor) {
         this.employeeRepo = employeeRepo;
-        Button toViewModal = new Button("Go to ViewModal", event ->
-                getUI().ifPresent(ui -> ui.navigate(ModalView.class)));
-        Button toList = new Button("Go to Employee List", event ->
-                getUI().ifPresent(ui -> ui.navigate(EmployeeListView.class)));
 
+        Button backButton = new Button("Back to Main View", event ->
+                getUI().ifPresent(ui -> ui.navigate(MainView.class)));
+        add(backButton);
         Button addNewBtn = new Button("Add new");
-        HorizontalLayout toolbar = new HorizontalLayout(toViewModal, toList, filter, addNewBtn);
-        HorizontalLayout main = new HorizontalLayout(grid, editor);
-        main.setSizeFull();
-        grid.setPageSize(5);  // This sets how many rows to fetch at once.
-        grid.setWidth("100%");  // Адаптивная ширина
-
+        HorizontalLayout toolbar = new HorizontalLayout(backButton, filter, addNewBtn);
         grid.setColumns("id", "lastName", "firstName", "patronymic", "description", "birthDate");
-        editor.setWidth("auto");  // Адаптивная ширина для редактора
-        main.setFlexGrow(1, grid);
-        add(toolbar, main);
+        grid.setWidth("100%");
+
+        editor.setWidth("auto");
+        editor.setChangeHandler(() -> {
+            editorDialog.close(); // Close the dialog when changes are saved
+            showEmployee(filter.getValue());
+        });
+
+        editor.setDialog(editorDialog);
+
+        // Add editor to dialog
+        editorDialog.add(editor);
+        editorDialog.setModal(true);
+
         filter.setValueChangeMode(ValueChangeMode.LAZY);
         filter.addValueChangeListener(e -> showEmployee(e.getValue()));
 
-        // Connect selected Customer to editor or hide if none is selected
+        // Connect selected Employee to editor dialog or hide if none is selected
         grid.asSingleSelect().addValueChangeListener(e -> {
-            editor.editEmployee(e.getValue());
+            if (e.getValue() != null) {
+                editor.editEmployee(e.getValue());
+                editorDialog.open();  // Open the dialog when an employee is selected
+            }
         });
 
-        // Instantiate and edit new Customer the new button is clicked
-        addNewBtn.addClickListener(e -> editor.editEmployee(new Employee()));
-
-        // Listen changes made by the editor, refresh data from backend
-        editor.setChangeHandler(() -> {
-            editor.setVisible(false);
-            showEmployee(filter.getValue());
+        // Instantiate and edit new Employee when the new button is clicked
+        addNewBtn.addClickListener(e -> {
+            editor.editEmployee(new Employee());
+            editorDialog.open();  // Open the dialog for new employee
         });
+
+        // Set up layout
+        HorizontalLayout main = new HorizontalLayout(grid);
+        main.setSizeFull();
+        add(toolbar, main);
+        setSizeFull();
         showEmployee("");
     }
 

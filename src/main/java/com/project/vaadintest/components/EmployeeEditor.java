@@ -7,6 +7,7 @@ import com.vaadin.flow.component.KeyNotifier;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -41,6 +42,8 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
     private DatePicker datePicker = new DatePicker("Date of birth");
 
     private Binder<Employee> binder = new Binder<>(Employee.class);
+    @Setter
+    private Dialog dialog;
 
     public EmployeeEditor() {
         HorizontalLayout actions = new HorizontalLayout(save, cancel, delete);
@@ -57,9 +60,18 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
         // wire action buttons to save, delete and reset
         save.addClickListener(e -> save());
         delete.addClickListener(e -> delete());
-        cancel.addClickListener(e -> setVisible(false));
+        cancel.addClickListener(e -> {
+            setVisible(false);
+            if (dialog != null) {
+                dialog.close(); // Close the dialog when cancel is clicked
+            }
+        });
         setVisible(false);
     }
+
+//    public void setDialog(Dialog dialog) {
+//        this.dialog = dialog;
+//    }
 
     public void editEmployee(Employee newEmployee) {
         if (newEmployee == null) {
@@ -91,6 +103,10 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
         employeeRepo.save(employee);
         changeHandler.onChange();
     }
+
+//    public void setChangeHandler(ChangeHandler h) {
+//        this.changeHandler = h;
+//    }
 
     public interface ChangeHandler {
         void onChange();
