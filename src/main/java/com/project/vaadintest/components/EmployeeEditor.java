@@ -11,6 +11,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.richtexteditor.RichTextEditor;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
@@ -37,13 +38,14 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
     private TextField firstName = new TextField("First name");
     private TextField lastName = new TextField("Last name");
     private TextField patronymic = new TextField("Patronymic");
-    private TextArea description = new TextArea("Description");
+    private RichTextEditor description = new RichTextEditor();
 
     private DatePicker datePicker = new DatePicker("Date of birth");
 
     private Binder<Employee> binder = new Binder<>(Employee.class);
     @Setter
     private Dialog dialog;
+//    RichTextEditor editor = new RichTextEditor();
 
     public EmployeeEditor() {
         this.firstName.setWidth("100%");
@@ -51,6 +53,8 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
         this.patronymic.setWidth("100%");
         this.description.setWidth("100%");
         this.datePicker.setWidth("100%");
+        description.setValue("<p>Write your <strong>formatted</strong> text here...</p>");
+
         HorizontalLayout actions = new HorizontalLayout(save, cancel, delete);
 
         add(lastName, firstName, patronymic, description, datePicker, actions);
@@ -74,10 +78,6 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
         setVisible(false);
     }
 
-//    public void setDialog(Dialog dialog) {
-//        this.dialog = dialog;
-//    }
-
     public void editEmployee(Employee newEmployee) {
         if (newEmployee == null) {
             setVisible(false);
@@ -90,6 +90,9 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
         }
         binder.forField(datePicker)
                 .bind(Employee::getBirthDate, Employee::setBirthDate);
+
+        binder.forField(description)
+                .bind(Employee::getDescription, Employee::setDescription);
 
         binder.setBean(employee);
 
@@ -105,13 +108,10 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
 
     private void save() {
         employee.setBirthDate(datePicker.getValue());
+        employee.setDescription(description.getValue());
         employeeRepo.save(employee);
         changeHandler.onChange();
     }
-
-//    public void setChangeHandler(ChangeHandler h) {
-//        this.changeHandler = h;
-//    }
 
     public interface ChangeHandler {
         void onChange();
