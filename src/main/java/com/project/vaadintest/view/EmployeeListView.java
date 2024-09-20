@@ -36,7 +36,7 @@ public class EmployeeListView extends VerticalLayout {
 
         grid.setPageSize(5);
         grid.setWidth("100%");
-//
+
         Grid.Column<Employee> idColumn = grid.addColumn(new ComponentRenderer<>(employee -> {
             Button idButton = new Button(String.valueOf(employee.getId()));
             idButton.addClickListener(click -> {
@@ -45,14 +45,30 @@ public class EmployeeListView extends VerticalLayout {
             return idButton; // Return the button to be displayed in the grid
         })).setHeader("ID").setFlexGrow(0);
 
+//        grid.addColumns("lastName", "firstName", "patronymic", "description", "birthDate");
+//        Grid.Column<Employee> idColumn = grid.getColumnByKey("id");
+//        Grid.Column<Employee> idNativeColumn = grid.getColumnByKey("id");
+        Grid.Column<Employee> lastNameColumn = grid.getColumnByKey("lastName");
+        Grid.Column<Employee> firstNameColumn = grid.getColumnByKey("firstName");
+        Grid.Column<Employee> patronymicColumn = grid.getColumnByKey("patronymic");
+        Grid.Column<Employee> descriptionColumn = grid.getColumnByKey("description");
+        Grid.Column<Employee> birthDateColumn = grid.getColumnByKey("birthDate");
+        grid.removeColumnByKey("id");
         List<Grid.Column<Employee>> orderedColumns = new ArrayList<>();
         orderedColumns.add(idColumn); // Add the ID column first
-        orderedColumns.addAll(grid.getColumns().stream()
-                .filter(column -> !column.equals(idColumn)) // Exclude the ID column to avoid duplication
-                .toList()); // Add remaining columns
+//        orderedColumns.addAll(grid.getColumns().stream()
+//                .filter(column -> !column.equals(idColumn))// Exclude the ID column to avoid duplication
+//                .toList()); // Add remaining columns
 
+//        orderedColumns.add(idNativeColumn); // Add the Last Name column
+        orderedColumns.add(lastNameColumn); // Add the Last Name column
+        orderedColumns.add(firstNameColumn);// Add the First Name column
+        orderedColumns.add(patronymicColumn); // Add the Patronymic column
+        orderedColumns.add(descriptionColumn); // Add the Patronymic column
+        orderedColumns.add(birthDateColumn);
         // Set the column order
         grid.setColumnOrder(orderedColumns);
+
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
 
         add(addNewBtn, grid);
