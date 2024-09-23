@@ -47,7 +47,9 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
     private Dialog dialog;
 //    RichTextEditor editor = new RichTextEditor();
 
+
     public EmployeeEditor() {
+
         this.firstName.setWidth("100%");
         this.lastName.setWidth("100%");
         this.patronymic.setWidth("100%");
