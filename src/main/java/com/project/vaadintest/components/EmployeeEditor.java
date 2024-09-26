@@ -7,7 +7,9 @@ import com.vaadin.flow.component.KeyNotifier;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -39,7 +41,7 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
     private TextField lastName = new TextField("Last name");
     private TextField patronymic = new TextField("Patronymic");
     private RichTextEditor description = new RichTextEditor();
-
+//    private QuillEditor area = new QuillEditor();
     private DatePicker datePicker = new DatePicker("Date of birth");
 
     private Binder<Employee> binder = new Binder<>(Employee.class);
@@ -54,6 +56,7 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
         this.lastName.setWidth("100%");
         this.patronymic.setWidth("100%");
         this.description.setWidth("100%");
+//        this.area.setWidth("100%");
         this.datePicker.setWidth("100%");
         description.setValue("<p>Write your <strong>formatted</strong> text here...</p>");
 

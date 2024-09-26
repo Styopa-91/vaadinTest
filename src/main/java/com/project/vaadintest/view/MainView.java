@@ -8,7 +8,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.provider.CallbackDataProvider;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -18,11 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.*;
+
 
 @Route
 public class MainView extends VerticalLayout implements BeforeEnterObserver {
@@ -37,6 +34,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     private int currentPage = 0; // Current page number
     private final int itemsPerPage = 5; // Number of items per page
     private final int visiblePages = 5;
+    private ListDataProvider<Employee> dataProvider;
 
     @Autowired
     public MainView(EmployeeRepo employeeRepo, EmployeeEditor editor) {
@@ -79,42 +77,39 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     private void updateView() {
-        showEmployee(filter.getValue());
-        updatePaginationLayout();
+        loadData(); // Загружаем данные
+        updatePaginationLayout(); // Обновляем элементы пагинации
     }
 
-    private void showEmployee(String name) {
-        CallbackDataProvider<Employee, Void> dataProvider = new CallbackDataProvider<>(
-                query -> {
-                    int page = query.getOffset() / itemsPerPage;
-                    int limit = query.getLimit();
+    private void loadData() {
+        Pageable pageable = PageRequest.of(currentPage, itemsPerPage);
+        List<Employee> employees;
 
-                    // Ensure the limit is not zero to avoid division by zero errors
-//                    if (limit == 0) {
-//                        return Stream.empty();
-//                    }
+        // Fetch data based on filter value
+        if (filter.getValue() == null || filter.getValue().isEmpty()) {
+            employees = employeeRepo.findAll(pageable).getContent();
+        } else {
+            employees = employeeRepo.findByName(filter.getValue(), pageable).getContent();
+        }
 
-                    Pageable pageable = PageRequest.of(page, itemsPerPage);
+        // Create a new modifiable list from the fetched employees
+        List<Employee> modifiableEmployees = new ArrayList<>(employees);
 
-                    // Fetch items based on whether name filter is applied
-                    if (name == null || name.isEmpty()) {
-                        return employeeRepo.findAll(pageable).stream(); // Fetch all employees
-                    } else {
-                        return employeeRepo.findByName(name, pageable).stream(); // Filter by name
-                    }
-                },
-                query -> {
-                    // Return the total count based on whether name filter is applied
-                    if (name == null || name.isEmpty()) {
-                        return (int) employeeRepo.count(); // Total number of employees
-                    } else {
-                        return employeeRepo.findByNameWithoutPagination(name).size(); // Total number of filtered employees
-                    }
-                }
-        );
+        if (dataProvider == null) {
+            // Create a new ListDataProvider and set it to the grid
+            dataProvider = new ListDataProvider<>(modifiableEmployees);
+            grid.setDataProvider(dataProvider);
+        } else {
+            // If dataProvider is already set, simply replace its items
+            dataProvider.getItems().clear();
+            dataProvider.getItems().addAll(modifiableEmployees);
 
-        grid.setDataProvider(dataProvider);
+            // Refresh the data provider to update the view
+            dataProvider.refreshAll();
+        }
     }
+
+
 
     private void updatePaginationLayout() {
         paginationLayout.removeAll();
@@ -153,7 +148,7 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
         currentPage = pageNumber;
         updateView();
 
-        // Update the URL with the current page number
+        // Обновляем URL с текущей страницей
         Map<String, String> params = new HashMap<>();
         params.put("page", String.valueOf(currentPage + 1));
         getUI().ifPresent(ui -> ui.navigate("", QueryParameters.simple(params)));
@@ -161,9 +156,10 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        // Get the current page from the URL parameter
-        Optional<String> page = event.getLocation().getQueryParameters().getParameters().getOrDefault("page", List.of("1")).stream().findFirst();
-        currentPage = page.map(p -> Integer.parseInt(p) - 1).orElse(0); // Convert 1-based to 0-based index
+        // Получаем текущую страницу из параметра URL
+        Optional<String> page = event.getLocation().getQueryParameters().getParameters()
+                .getOrDefault("page", List.of("1")).stream().findFirst();
+        currentPage = page.map(p -> Integer.parseInt(p) - 1).orElse(0); // Переводим из 1-базированного в 0-базированный индекс
         updateView();
     }
 }

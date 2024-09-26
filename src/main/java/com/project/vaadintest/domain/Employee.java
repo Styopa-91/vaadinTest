@@ -17,6 +17,7 @@ public class Employee {
     private String firstName;
     private String patronymic;
     private String description;
+    private String area;
     private LocalDate birthDate;
 }
 
