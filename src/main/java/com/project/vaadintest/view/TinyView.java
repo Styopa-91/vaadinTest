@@ -10,8 +10,8 @@ public class TinyView extends VerticalLayout {
 
     public TinyView() {
         TinyMCEEditor editor = new TinyMCEEditor();
-        editor.setWidth("100%");
-        editor.setHeight("400px");
+//        editor.setWidth("100%");
+//        editor.setHeight("400px");
 
         add(editor);
 

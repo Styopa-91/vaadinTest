@@ -43,9 +43,11 @@ public class MainView extends VerticalLayout implements BeforeEnterObserver {
                 getUI().ifPresent(ui -> ui.navigate(ModalView.class)));
         Button toList = new Button("Go to Employee List", event ->
                 getUI().ifPresent(ui -> ui.navigate(EmployeeListView.class)));
+        Button toDepartments = new Button("Go to Departments List", event ->
+                getUI().ifPresent(ui -> ui.navigate(ModalViewDepartment.class)));
 
         Button addNewBtn = new Button("Add new");
-        HorizontalLayout toolbar = new HorizontalLayout(toViewModal, toList, filter, addNewBtn);
+        HorizontalLayout toolbar = new HorizontalLayout(toViewModal, toList, toDepartments, filter, addNewBtn);
         HorizontalLayout main = new HorizontalLayout(grid, editor);
         main.setSizeFull();
         grid.setPageSize(itemsPerPage);  // This sets how many rows to fetch at once.

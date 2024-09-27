@@ -1,7 +1,10 @@
 package com.project.vaadintest.view;
 
+import com.project.vaadintest.components.DepartmentEditor;
 import com.project.vaadintest.components.EmployeeEditor;
+import com.project.vaadintest.domain.Department;
 import com.project.vaadintest.domain.Employee;
+import com.project.vaadintest.repo.DepartmentRepo;
 import com.project.vaadintest.repo.EmployeeRepo;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -18,27 +21,25 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.stream.Stream;
 
-@Route("modal-view")  // Different route to distinguish from the MainView
-public class ModalView extends VerticalLayout {
+@Route("departments")
+public class ModalViewDepartment extends VerticalLayout {
 
-    private final EmployeeRepo employeeRepo;
+    private final DepartmentRepo departmentRepo;
 
-    private final Grid<Employee> grid = new Grid<>(Employee.class);
-
-    private final TextField filter = new TextField("", "Type to filter");
+    private final Grid<Department> grid = new Grid<>(Department.class);
 
     private final Dialog editorDialog = new Dialog();  // Dialog for editor
 
     @Autowired
-    public ModalView(EmployeeRepo employeeRepo, EmployeeEditor editor) {
-        this.employeeRepo = employeeRepo;
+    public ModalViewDepartment(DepartmentRepo departmentRepo, DepartmentEditor editor) {
+        this.departmentRepo = departmentRepo;
 
         Button backButton = new Button("Back to Main View", event ->
                 getUI().ifPresent(ui -> ui.navigate(MainView.class)));
         add(backButton);
         Button addNewBtn = new Button("Add new");
-        HorizontalLayout toolbar = new HorizontalLayout(backButton, filter, addNewBtn);
-        grid.setColumns("id", "lastName", "firstName", "patronymic", "description", "birthDate");
+        HorizontalLayout toolbar = new HorizontalLayout(backButton, addNewBtn);
+        grid.setColumns("id", "title", "description");
         grid.setWidth("100%");
 
         editor.setWidth("auto");
@@ -46,8 +47,8 @@ public class ModalView extends VerticalLayout {
 
         editor.setChangeHandler(() -> {
             editorDialog.close(); // Close the dialog when changes are saved
-            showEmployee(filter.getValue());
-            getUI().ifPresent(ui -> ui.getPage().reload());
+            showEmployee();
+//            getUI().ifPresent(ui -> ui.getPage().reload());
         });
 
         editor.setDialog(editorDialog);
@@ -61,24 +62,21 @@ public class ModalView extends VerticalLayout {
             if (!event.isOpened()) {
                 // The dialog is now closed
                 editor.setVisible(false); // Optionally hide the editor
-                showEmployee(filter.getValue()); // Refresh the grid or any other logic
+                showEmployee(); // Refresh the grid or any other logic
             }
         });
-
-        filter.setValueChangeMode(ValueChangeMode.LAZY);
-        filter.addValueChangeListener(e -> showEmployee(e.getValue()));
 
         // Connect selected Employee to editor dialog or hide if none is selected
         grid.asSingleSelect().addValueChangeListener(e -> {
             if (e.getValue() != null) {
-                editor.editEmployee(e.getValue());
+                editor.editDepartment(e.getValue());
                 editorDialog.open();  // Open the dialog when an employee is selected
             }
         });
 
         // Instantiate and edit new Employee when the new button is clicked
         addNewBtn.addClickListener(e -> {
-            editor.editEmployee(new Employee());
+            editor.editDepartment(new Department());
             editorDialog.open();  // Open the dialog for new employee
         });
 
@@ -87,36 +85,26 @@ public class ModalView extends VerticalLayout {
         main.setSizeFull();
         add(toolbar, main);
         setSizeFull();
-        showEmployee("");
+        showEmployee();
     }
 
-    private void showEmployee(String name) {
-        CallbackDataProvider<Employee, Void> dataProvider = new CallbackDataProvider<>(
+    private void showEmployee() {
+        CallbackDataProvider<Department, Void> dataProvider = new CallbackDataProvider<>(
                 query -> {
                     int offset = query.getOffset();
                     int limit = query.getLimit();
 
-                    // Ensure the limit is not zero to avoid division by zero errors
                     if (limit == 0) {
                         return Stream.empty();
                     }
-
                     Pageable pageable = PageRequest.of(offset / limit, limit);
 
-                    // Fetch items based on whether name filter is applied
-                    if (name == null || name.isEmpty()) {
-                        return employeeRepo.findAll(pageable).stream(); // Fetch all employees
-                    } else {
-                        return employeeRepo.findByName(name, pageable).stream(); // Filter by name
-                    }
+                    return departmentRepo.findAll(pageable).stream(); // Fetch all employees
+
                 },
                 query -> {
                     // Return the total count based on whether name filter is applied
-                    if (name == null || name.isEmpty()) {
-                        return (int) employeeRepo.count(); // Total number of employees
-                    } else {
-                        return employeeRepo.findByNameWithoutPagination(name).size(); // Total number of filtered employees
-                    }
+                    return (int) departmentRepo.count(); // Total number of employees
                 }
         );
 

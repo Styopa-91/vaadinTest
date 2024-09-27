@@ -9,14 +9,11 @@ import java.time.LocalDate;
 
 @Entity
 @Data
-public class Employee {
+public class Department {
     @Id
     @GeneratedValue
     private Long id;
-    private String lastName;
-    private String firstName;
-    private String patronymic;
+    private String title;
     private String description;
-    private LocalDate birthDate;
 }
 

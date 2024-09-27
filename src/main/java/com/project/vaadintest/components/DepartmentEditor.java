@@ -1,34 +1,32 @@
 package com.project.vaadintest.components;
 
-import com.project.vaadintest.domain.Employee;
-import com.project.vaadintest.repo.EmployeeRepo;
+import com.project.vaadintest.domain.Department;
+import com.project.vaadintest.repo.DepartmentRepo;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.KeyNotifier;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.richtexteditor.RichTextEditor;
-import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
+import com.wontlost.ckeditor.Constants;
+import com.wontlost.ckeditor.VaadinCKEditor;
+import com.wontlost.ckeditor.VaadinCKEditorBuilder;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @SpringComponent
 @UIScope
-public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
+public class DepartmentEditor extends VerticalLayout implements KeyNotifier {
     @Autowired
-    private EmployeeRepo employeeRepo;
+    private DepartmentRepo departmentRepo;
 
-    private Employee employee;
+    private Department department;
 
     @Setter
     private ChangeHandler changeHandler;
@@ -36,36 +34,26 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
     private final Button save = new Button("Save", VaadinIcon.CHECK.create());
     private final Button cancel = new Button("Cancel");
     private final Button delete = new Button("Delete", VaadinIcon.TRASH.create());
-
-    private TextField firstName = new TextField("First name");
-    private TextField lastName = new TextField("Last name");
-    private TextField patronymic = new TextField("Patronymic");
+    private TextField title = new TextField("Title");
 //    private RichTextEditor description = new RichTextEditor();
-    TinyMCEEditor description = new TinyMCEEditor();
+    private VaadinCKEditor description =new VaadinCKEditorBuilder().with(builder -> {
+        builder.editorData = "<p>This is a classic editor sample.</p>";
+        builder.editorType = Constants.EditorType.CLASSIC;
+        builder.theme = Constants.ThemeType.DARK;
+    }).createVaadinCKEditor();
 
-    //    private QuillEditor area = new QuillEditor();
-    private DatePicker datePicker = new DatePicker("Date of birth");
-
-    private Binder<Employee> binder = new Binder<>(Employee.class);
+    private Binder<Department> binder = new Binder<>(Department.class);
     @Setter
     private Dialog dialog;
-//    RichTextEditor editor = new RichTextEditor();
 
-
-    public EmployeeEditor() {
-
-        this.firstName.setWidth("100%");
-        this.lastName.setWidth("100%");
-        this.patronymic.setWidth("100%");
+    public DepartmentEditor() {
 //        this.description.setWidth("100%");
 //        description.setHeight("400px");
-//        this.area.setWidth("100%");
-        this.datePicker.setWidth("100%");
         description.setValue("<p>Write your <strong>formatted</strong> text here...</p>");
 
         HorizontalLayout actions = new HorizontalLayout(save, cancel, delete);
 
-        add(lastName, firstName, patronymic, description, datePicker, actions);
+        add(title, description, actions);
         binder.bindInstanceFields(this);
         setPadding(false);
 
@@ -74,7 +62,6 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
 
         addKeyPressListener(Key.ENTER, e -> save());
 
-        // wire action buttons to save, delete and reset
         save.addClickListener(e -> save());
         delete.addClickListener(e -> delete());
         cancel.addClickListener(e -> {
@@ -83,49 +70,37 @@ public class EmployeeEditor extends VerticalLayout implements KeyNotifier {
                 dialog.close(); // Close the dialog when cancel is clicked
                 changeHandler.onChange();
             }
-
         });
         setVisible(false);
     }
 
-    public void editEmployee(Employee newEmployee) {
-        if (newEmployee == null) {
+    public void editDepartment(Department newDepartment) {
+        if (newDepartment == null) {
             setVisible(false);
             return;
         }
-        if (newEmployee.getId() != null) {
-            employee = employeeRepo.findById(newEmployee.getId()).orElse(newEmployee);
+        if (newDepartment.getId() != null) {
+            department = departmentRepo.findById(newDepartment.getId()).orElse(newDepartment);
         } else {
-            employee = newEmployee;
+            department = newDepartment;
         }
-        binder.forField(datePicker)
-                .bind(Employee::getBirthDate, Employee::setBirthDate);
-
         binder.forField(description)
-                .bind(Employee::getDescription, Employee::setDescription);
-
-        binder.setBean(employee);
-
+                .bind(Department::getDescription, Department::setDescription);
+        binder.setBean(department);
         setVisible(true);
-
-        lastName.focus();
+        title.focus();
     }
 
     private void delete() {
-        employeeRepo.delete(employee);
+        departmentRepo.delete(department);
         changeHandler.onChange();
     }
 
     private void save() {
-        employee.setBirthDate(datePicker.getValue());
-
-        employee.setDescription(description.getValue());
-        description.getValueAsync(value -> {
-            System.out.println("Current value: " + value);
-            employee.setDescription(value);
-            employeeRepo.save(employee);
-            changeHandler.onChange();
-        });
+        department.setTitle(title.getValue());
+        department.setDescription(description.getValue());
+        departmentRepo.save(department);
+        changeHandler.onChange();
     }
 
     public interface ChangeHandler {
